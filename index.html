@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S. Yogabhishek | Creative Technologist</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- Three.js for Hero Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    
+    <!-- Vanilla Tilt for 3D Cards -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.0/vanilla-tilt.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;600;900&display=swap');
+
+        :root {
+            --accent: #d9f99d; /* Lime-ish accent like Lando's */
+            --dark: #09090b;
+        }
+
+        body {
+            background-color: var(--dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .display-text {
+            font-family: 'Anton', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .outline-text {
+            -webkit-text-stroke: 1px rgba(255, 255, 255, 0.3);
+            color: transparent;
+            transition: all 0.5s ease;
+        }
+        
+        .project-card:hover .outline-text {
+            -webkit-text-stroke: 1px #d9f99d;
+            color: transparent;
+        }
+
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d9f99d;
+        }
+
+        /* Spotlight Text Effect */
+        .spotlight-container {
+            position: relative;
+            display: inline-block;
+            cursor: default;
+            /* Ensure the container has dimensions */
+            z-index: 10;
+        }
+        
+        .spotlight-base {
+            position: relative;
+            z-index: 5;
+            color: white;
+        }
+
+        .spotlight-reveal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex; /* Flex to center content exactly */
+            justify-content: center;
+            align-items: center;
+            
+            color: black; 
+            background-color: white; /* The "flashlight" beam color */
+            
+            clip-path: circle(0px at 0 0);
+            transition: clip-path 0.15s cubic-bezier(0.23, 1, 0.32, 1); /* Slightly snappier */
+            pointer-events: none;
+            z-index: 20; /* Must be higher than base */
+        }
+
+        .spotlight-base, .spotlight-reveal-content {
+            margin: 0;
+            line-height: 0.85;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            letter-spacing: -0.05em;
+        }
+
+        /* Hero Background Canvas */
+        #hero-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* Behind content */
+            opacity: 0.6;
+            pointer-events: none; /* Crucial: Let clicks pass through */
+        }
+
+    </style>
+</head>
+<body class="antialiased selection:bg-[#d9f99d] selection:text-black">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full z-50 flex justify-between items-center p-6 md:p-8 bg-black/10 backdrop-blur-2xl border-b border-white/5 text-white transition-all duration-300">
+        <a href="#" class="text-2xl font-bold tracking-tighter hover:text-[#d9f99d] transition-colors">SY.OS</a>
+        
+        <div class="hidden md:flex gap-8 text-sm font-semibold tracking-widest uppercase">
+            <a href="#projects" class="hover:text-[#d9f99d] transition-colors">Work</a>
+            <a href="#skills" class="hover:text-[#d9f99d] transition-colors">Stack</a>
+            <a href="#about" class="hover:text-[#d9f99d] transition-colors">About</a>
+        </div>
+
+        <a href="#contact" class="hidden md:block px-6 py-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all text-xs font-bold uppercase tracking-widest">
+            Contact
+        </a>
+
+        <!-- Mobile Menu Icon -->
+        <button class="md:hidden text-white">
+            <i data-lucide="menu"></i>
+        </button>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <header class="relative min-h-screen flex flex-col pt-32 pb-12 px-6 md:px-12 overflow-hidden bg-black">
+        
+        <!-- Three.js Background -->
+        <div id="hero-canvas"></div>
+        
+        <div class="max-w-[1600px] mx-auto w-full h-full flex flex-col justify-between flex-grow relative z-10 pointer-events-none">
+            
+            <!-- Top Bar: Info & Status -->
+            <div class="flex justify-between items-start w-full relative z-20 pointer-events-auto">
+                <p class="text-[#d9f99d] font-mono text-sm hero-anim">/// PUNE, IN • EST. 2029</p>
+                
+                <div class="flex flex-col items-end gap-2 hero-anim delay-100">
+                    <span class="px-3 py-1 border border-[#d9f99d] text-[#d9f99d] text-xs font-bold uppercase tracking-widest rounded-full">
+                        Student
+                    </span>
+                    <p class="text-right text-zinc-400 max-w-xs text-sm leading-relaxed hidden md:block">
+                        Senior Creative Technologist & Full Stack Developer.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Center: Name -->
+            <div class="flex-grow flex flex-col items-center justify-center hero-anim w-full relative z-10 my-12 pointer-events-auto">
+                <!-- Spotlight Name Effect -->
+                <div class="spotlight-container text-center" id="hero-spotlight">
+                    <!-- Layer 1: Base Name -->
+                    <h1 class="spotlight-base text-[clamp(3rem,9vw,10rem)]">
+                        S. YOGABHISHEK
+                    </h1>
+                    
+                    <!-- Layer 2: Revealed Text -->
+                    <div class="spotlight-reveal" id="reveal-layer">
+                        <h1 class="spotlight-reveal-content text-[clamp(3rem,9vw,10rem)]">
+                            FRONT-END DEV
+                        </h1>
+                    </div>
+                </div>
+                
+                <!-- Added Hint Text -->
+                <p class="text-zinc-500 text-[10px] md:text-xs mt-6 uppercase tracking-[0.2em] font-mono opacity-60">
+                    [ Cursor over to see specialization ]
+                </p>
+            </div>
+
+            <!-- Bottom: Featured & Focus -->
+            <div class="flex flex-col md:flex-row justify-between items-end hero-anim delay-200 gap-8 relative z-20 border-t border-white/10 pt-8 pointer-events-auto">
+                <div class="hidden md:block">
+                    <p class="text-xs text-zinc-500 uppercase tracking-widest mb-1">Current Focus</p>
+                    <p class="text-xl font-bold">Automation & WebGL</p>
+                </div>
+                
+                <div class="w-full md:w-auto">
+                    <p class="text-xs text-zinc-500 uppercase tracking-widest mb-2 md:text-right">Featured Project</p>
+                    <a href="https://void-lab-x.vercel.app/" target="_blank" class="group block relative overflow-hidden rounded-lg aspect-video md:w-[400px] bg-zinc-900 border border-white/10" data-tilt data-tilt-glare data-tilt-max-glare="0.5" data-tilt-scale="1.05">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                        <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop" alt="Void Lab" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-700">
+                        <div class="absolute bottom-4 left-4 z-20">
+                            <h3 class="text-2xl text-white group-hover:text-[#d9f99d] transition-colors">Void-LabX</h3>
+                            <p class="text-xs text-zinc-400 font-mono">React • Three.js • WebGL</p>
+                        </div>
+                        <div class="absolute top-4 right-4 z-20 bg-white text-black p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform translate-y-2 group-hover:translate-y-0">
+                            <i data-lucide="arrow-up-right" size="16"></i>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- MARQUEE -->
+    <div class="py-8 bg-[#d9f99d] text-black overflow-hidden border-y border-black relative z-20">
+        <div class="marquee-container">
+            <div class="marquee-content text-4xl font-bold uppercase tracking-tighter">
+                Creative Technologist • Automation Expert • Frontend Developer • 3D Web Experiences • Creative Technologist • Automation Expert • Frontend Developer • 3D Web Experiences •
+            </div>
+        </div>
+    </div>
+
+    <!-- BIO / QUOTE SECTION -->
+    <section id="about" class="py-32 px-6 md:px-12 max-w-[1600px] mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+            <div class="md:col-span-8">
+                <h2 class="text-4xl md:text-7xl leading-tight mb-8 reveal-text">
+                    "REDEFINING LIMITS. FIGHTING FOR <span class="text-[#d9f99d]">PERFORMANCE.</span> BRINGING IT ALL TOGETHER IN CODE."
+                </h2>
+                <div class="flex gap-4 items-center">
+                    <div class="h-[1px] w-24 bg-white/30"></div>
+                    <p class="text-zinc-400 max-w-xl text-lg">
+                        I specialize in bridging the gap between design and engineering. From high-performance 3D web experiences to intelligent automation workflows, I build systems that solve real problems.
+                    </p>
+                </div>
+            </div>
+            <div class="md:col-span-4 flex flex-col gap-6">
+                <!-- Added Tilt to Bio Cards -->
+                <div class="bg-zinc-900/50 p-8 border border-white/10 rounded-lg" data-tilt data-tilt-glare data-tilt-max-glare="0.2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <i data-lucide="graduation-cap" class="text-[#d9f99d]"></i>
+                        <h3 class="text-xl">Education</h3>
+                    </div>
+                    <p class="font-bold text-lg">NxtWave Institute</p>
+                    <p class="text-zinc-500 text-sm">Advanced Technologies • Class of 2029</p>
+                </div>
+                <div class="bg-zinc-900/50 p-8 border border-white/10 rounded-lg" data-tilt data-tilt-glare data-tilt-max-glare="0.2">
+                    <div class="flex items-center gap-3 mb-4">
+                        <i data-lucide="trophy" class="text-[#d9f99d]"></i>
+                        <h3 class="text-xl">Recognition</h3>
+                    </div>
+                    <p class="font-bold text-lg">GDG Hackathon</p>
+                    <p class="text-zinc-500 text-sm">Runner Up • Google Developers Group</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HORIZONTAL PROJECTS SCROLL -->
+    <section id="projects" class="relative overflow-hidden bg-black text-white">
+        <!-- Container for horizontal panels -->
+        <div class="projects-wrapper flex w-[300%] h-screen">
+            
+            <!-- Project 1 -->
+            <div class="project-panel w-screen h-screen flex-shrink-0 relative border-r border-white/10 overflow-hidden">
+                <div class="absolute inset-0 bg-black/60 z-10"></div>
+                <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale opacity-50">
+                
+                <div class="relative z-20 h-full flex flex-col justify-center px-6 md:px-24 max-w-7xl mx-auto">
+                    <div class="flex items-end gap-4 mb-4">
+                        <span class="text-[#d9f99d] font-mono text-xl">01</span>
+                        <div class="h-[1px] w-24 bg-[#d9f99d] mb-2"></div>
+                    </div>
+                    <!-- CHANGED FONT -->
+                    <h2 class="text-[clamp(4rem,10vw,8rem)] leading-none font-bold font-sans tracking-tighter uppercase mb-6 text-white">
+                        VOID-LAB X
+                    </h2>
+                    <p class="text-xl md:text-2xl text-zinc-300 max-w-2xl mb-8">
+                        An immersive 3D web game engineered with React and Three.js. Features a custom physics engine and 60FPS optimized rendering.
+                    </p>
+                    <a href="https://void-lab-x.vercel.app/" target="_blank" class="w-fit px-8 py-4 border border-white rounded-full hover:bg-[#d9f99d] hover:text-black hover:border-[#d9f99d] transition-all uppercase font-bold tracking-widest flex items-center gap-3">
+                        Launch Project <i data-lucide="arrow-right"></i>
+                    </a>
+                </div>
+                <!-- Scroll Hint -->
+                <div class="absolute bottom-12 right-12 z-20 flex items-center gap-4 text-zinc-500 animate-pulse">
+                    <span class="text-xs font-mono uppercase tracking-widest">Scroll to explore</span>
+                    <i data-lucide="arrow-right"></i>
+                </div>
+            </div>
+
+            <!-- Project 2 -->
+            <div class="project-panel w-screen h-screen flex-shrink-0 relative border-r border-white/10 overflow-hidden">
+                <div class="absolute inset-0 bg-black/60 z-10"></div>
+                <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1974&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale opacity-50">
+                
+                <div class="relative z-20 h-full flex flex-col justify-center px-6 md:px-24 max-w-7xl mx-auto">
+                    <div class="flex items-end gap-4 mb-4">
+                        <span class="text-[#d9f99d] font-mono text-xl">02</span>
+                        <div class="h-[1px] w-24 bg-[#d9f99d] mb-2"></div>
+                    </div>
+                    <!-- CHANGED FONT -->
+                    <h2 class="text-[clamp(4rem,10vw,8rem)] leading-none font-bold font-sans tracking-tighter uppercase mb-6 text-white">
+                        SOCIAL AUTO
+                    </h2>
+                    <p class="text-xl md:text-2xl text-zinc-300 max-w-2xl mb-8">
+                        Automated content pipeline orchestrated via n8n. Integrates OpenAI for context-aware captions, reducing manual workload by 90%.
+                    </p>
+                    <!-- REMOVED BUTTON -->
+                </div>
+            </div>
+
+            <!-- Project 3 -->
+            <div class="project-panel w-screen h-screen flex-shrink-0 relative overflow-hidden">
+                <div class="absolute inset-0 bg-black/60 z-10"></div>
+                <img src="https://images.unsplash.com/photo-1611606063065-ee7946f0787a?q=80&w=1974&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover grayscale opacity-50">
+                
+                <div class="relative z-20 h-full flex flex-col justify-center px-6 md:px-24 max-w-7xl mx-auto">
+                    <div class="flex items-end gap-4 mb-4">
+                        <span class="text-[#d9f99d] font-mono text-xl">03</span>
+                        <div class="h-[1px] w-24 bg-[#d9f99d] mb-2"></div>
+                    </div>
+                    <!-- CHANGED FONT -->
+                    <h2 class="text-[clamp(4rem,10vw,8rem)] leading-none font-bold font-sans tracking-tighter uppercase mb-6 text-white">
+                        WHATSAPP AI
+                    </h2>
+                    <p class="text-xl md:text-2xl text-zinc-300 max-w-2xl mb-8">
+                        Intelligent conversational agent leveraging OpenAI's GPT models through n8n workflows for real-time customer support.
+                    </p>
+                    <!-- REMOVED BUTTON -->
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- SKILLS (Simulating "Helmets" Gallery) -->
+    <section id="skills" class="py-20 px-6 md:px-12 bg-zinc-900/50">
+        <div class="max-w-[1600px] mx-auto">
+            <h2 class="text-6xl mb-16 text-center">TECHNICAL <span class="text-[#d9f99d]">ARSENAL</span></h2>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <!-- Skill Items - Added Tilt -->
+                <div class="aspect-square border border-white/10 flex flex-col items-center justify-center hover:bg-[#d9f99d] hover:text-black transition-all duration-300 group bg-zinc-900 transform-gpu" data-tilt data-tilt-scale="1.1">
+                    <i data-lucide="code-2" class="w-8 h-8 mb-2"></i>
+                    <span class="font-bold uppercase text-sm">Python</span>
+                </div>
+                <div class="aspect-square border border-white/10 flex flex-col items-center justify-center hover:bg-[#d9f99d] hover:text-black transition-all duration-300 group bg-zinc-900 transform-gpu" data-tilt data-tilt-scale="1.1">
+                    <i data-lucide="box" class="w-8 h-8 mb-2"></i>
+                    <span class="font-bold uppercase text-sm">Three.js</span>
+                </div>
+                <div class="aspect-square border border-white/10 flex flex-col items-center justify-center hover:bg-[#d9f99d] hover:text-black transition-all duration-300 group bg-zinc-900 transform-gpu" data-tilt data-tilt-scale="1.1">
+                    <i data-lucide="zap" class="w-8 h-8 mb-2"></i>
+                    <span class="font-bold uppercase text-sm">React</span>
+                </div>
+                <div class="aspect-square border border-white/10 flex flex-col items-center justify-center hover:bg-[#d9f99d] hover:text-black transition-all duration-300 group bg-zinc-900 transform-gpu" data-tilt data-tilt-scale="1.1">
+                    <i data-lucide="server" class="w-8 h-8 mb-2"></i>
+                    <span class="font-bold uppercase text-sm">Node.js</span>
+                </div>
+                <div class="aspect-square border border-white/10 flex flex-col items-center justify-center hover:bg-[#d9f99d] hover:text-black transition-all duration-300 group bg-zinc-900 transform-gpu" data-tilt data-tilt-scale="1.1">
+                    <i data-lucide="workflow" class="w-8 h-8 mb-2"></i>
+                    <span class="font-bold uppercase text-sm">n8n</span>
+                </div>
+                <div class="aspect-square border border-white/10 flex flex-col items-center justify-center hover:bg-[#d9f99d] hover:text-black transition-all duration-300 group bg-zinc-900 transform-gpu" data-tilt data-tilt-scale="1.1">
+                    <i data-lucide="brain-circuit" class="w-8 h-8 mb-2"></i>
+                    <span class="font-bold uppercase text-sm">OpenAI</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="contact" class="pt-32 pb-12 px-6 md:px-12 bg-black text-white border-t border-white/10">
+        <div class="max-w-[1600px] mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-24">
+                <div>
+                    <h2 class="text-7xl md:text-9xl leading-none mb-8">
+                        LET'S<br>BUILD<br><span class="text-[#d9f99d]">FUTURE.</span>
+                    </h2>
+                </div>
+                <div class="flex flex-col justify-end items-start md:items-end gap-6">
+                    <a href="mailto:syogabhishek@gmail.com" class="text-2xl md:text-4xl hover:text-[#d9f99d] transition-colors border-b border-white/30 pb-2">
+                        syogabhishek@gmail.com
+                    </a>
+                    <div class="flex gap-4">
+                        <a href="https://github.com/sabhishek13-py" target="_blank" class="px-6 py-3 border border-white/30 rounded-full hover:bg-[#d9f99d] hover:text-black transition-all uppercase font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="github" size="16"></i> GitHub
+                        </a>
+                        <a href="https://www.linkedin.com/in/yogabhishek-sukuluri-153304374/" target="_blank" class="px-6 py-3 border border-white/30 rounded-full hover:bg-[#d9f99d] hover:text-black transition-all uppercase font-bold text-sm flex items-center gap-2">
+                            <i data-lucide="linkedin" size="16"></i> LinkedIn
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col md:flex-row justify-between items-center text-zinc-500 text-xs font-mono uppercase tracking-widest pt-8 border-t border-white/10">
+                <p>&copy; 2029 S. Yogabhishek. All Rights Reserved.</p>
+                <div class="flex gap-6 mt-4 md:mt-0">
+                    <span>Pune, IN</span>
+                    <span>Local Time: <span id="time">00:00</span></span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Update Time
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            document.getElementById('time').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // --- THREE.JS PARTICLE TERRAIN ---
+        const initThree = () => {
+            const container = document.getElementById('hero-canvas');
+            const scene = new THREE.Scene();
+            
+            // Fog for depth
+            scene.fog = new THREE.FogExp2(0x09090b, 0.002);
+
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 50;
+            camera.position.y = 20;
+            camera.rotation.x = -0.5; // Look down at terrain
+
+            const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            // Particles Geometry
+            const geometry = new THREE.BufferGeometry();
+            const count = 2000;
+            const positions = new Float32Array(count * 3);
+            
+            // Create a grid of points
+            let i = 0;
+            const spread = 200;
+            for (let x = 0; x < count; x++) {
+                positions[i] = (Math.random() - 0.5) * spread; // x
+                positions[i + 1] = (Math.random() - 0.5) * 20; // y (height variation)
+                positions[i + 2] = (Math.random() - 0.5) * spread; // z
+                i += 3;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+            const material = new THREE.PointsMaterial({
+                color: 0xd9f99d, // Accent color
+                size: 0.4,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const particles = new THREE.Points(geometry, material);
+            scene.add(particles);
+
+            // Animation Loop
+            let time = 0;
+            const animate = () => {
+                requestAnimationFrame(animate);
+                time += 0.005;
+
+                // Gentle wave movement
+                const positions = particles.geometry.attributes.position.array;
+                for (let i = 0; i < count; i++) {
+                    const x = positions[i * 3];
+                    const z = positions[i * 3 + 2];
+                    
+                    // Sine wave based on position and time
+                    positions[i * 3 + 1] = Math.sin(x * 0.1 + time) * 2 + Math.cos(z * 0.1 + time) * 2;
+                }
+                particles.geometry.attributes.position.needsUpdate = true;
+
+                // Slow rotation
+                particles.rotation.y = time * 0.05;
+
+                renderer.render(scene, camera);
+            };
+
+            animate();
+
+            // Resize Handler
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        };
+
+        // Initialize Three.js after load
+        window.addEventListener('load', initThree);
+
+
+        // --- GSAP ANIMATIONS ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 1. Initial Hero Entry
+        const tl = gsap.timeline();
+        
+        tl.from(".hero-anim", {
+            y: 100,
+            opacity: 0,
+            duration: 1.2,
+            stagger: 0.2,
+            ease: "power4.out"
+        });
+
+        // 2. Scroll Animation: Name Zooms Out -> REVERSED to Zoom IN
+        gsap.to("#hero-spotlight", {
+            scrollTrigger: {
+                trigger: "header",
+                start: "top top",
+                end: "bottom 40%", 
+                scrub: 1
+            },
+            scale: 2.5,        // Changed from 0.5 to 2.5 (Zoom IN)
+            opacity: 0,        // Still fade out as it "passes" the camera
+            filter: "blur(10px)", // Added blur for realistic depth of field
+            transformOrigin: "center center",
+            ease: "power1.in"  // Accelerate slightly
+        });
+
+        // 3. Scroll Animation: Other Hero Elements Fade/Parallax
+        // Select direct children of hero-anim that are NOT the name spotlight
+        gsap.to(".hero-anim > :not(#hero-spotlight)", {
+            scrollTrigger: {
+                trigger: "header",
+                start: "top top",
+                end: "bottom 60%",
+                scrub: 1
+            },
+            y: -30,
+            opacity: 0,
+            stagger: 0.1
+        });
+
+        // 4. Horizontal Scroll for Projects
+        let projectPanels = gsap.utils.toArray(".project-panel");
+        
+        gsap.to(projectPanels, {
+            xPercent: -100 * (projectPanels.length - 1),
+            ease: "none",
+            scrollTrigger: {
+                trigger: "#projects",
+                pin: true,
+                scrub: 1,
+                // snap: 1 / (projectPanels.length - 1), // Optional snapping
+                end: () => "+=" + document.querySelector("#projects").offsetWidth
+            }
+        });
+
+        // Text Reveal on Scroll (Existing - kept for internal elements)
+        gsap.utils.toArray('.reveal-text').forEach(text => {
+            gsap.from(text, {
+                opacity: 0,
+                y: 30,
+                duration: 1,
+                scrollTrigger: {
+                    trigger: text,
+                    start: "top 85%",
+                    toggleActions: "play none none reverse"
+                }
+            });
+        });
+
+        // Spotlight Effect Logic
+        const container = document.getElementById('hero-spotlight');
+        const revealLayer = document.getElementById('reveal-layer');
+
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            revealLayer.style.clipPath = `circle(150px at ${x}px ${y}px)`;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            revealLayer.style.clipPath = `circle(0px at 0px 0px)`;
+        });
+
+        // Vanilla Tilt Initialization (Optional Manual Init if auto-init doesn't catch dynamic elements)
+        VanillaTilt.init(document.querySelectorAll("[data-tilt]"));
+
+    </script>
+</body>
+</html>
