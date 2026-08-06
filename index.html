@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Yogabhishek Sukuluri — a coastline of things I've built</title>
+<meta name="description" content="Yogabhishek Sukuluri — Certified Full Stack JavaScript Developer. React &amp; Next.js frontends, Python/Flask &amp; Node backends, and LLM pipelines on OpenAI, RAG and agents." />
+<meta name="theme-color" content="#FFE8C9" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Yogabhishek Sukuluri" />
+<meta property="og:description" content="Full stack &amp; AI engineer. Scroll the coast and I'll show you around." />
+
+<style>
+  :root {
+    --ink: #3A2E28;
+    --ink-soft: #6B564A;
+    --coral: #C4593F;
+    --coral-hot: #E8593A;
+    --cream: #FFFBF4;
+    --cream-2: #FFF7EA;
+    --sand: #FFE8C9;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: auto; }
+  body {
+    font-family: 'Nunito', system-ui, sans-serif;
+    font-weight: 700;
+    color: var(--ink);
+    background: #FFE8C9;
+    overscroll-behavior-y: none;
+  }
+  body.ready { background: #0B1020; }
+
+  /* ── scroll driver: an empty tall column the 3D scene reads ── */
+  #scroll { position: relative; z-index: 1; pointer-events: none; }
+
+  /* ── the scene ── */
+  #scene { position: fixed; inset: 0; z-index: 0; display: block; }
+  #vignette {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 45%, transparent 42%, rgba(46,28,18,0.30) 100%);
+    transition: background 1.2s ease;
+  }
+  body.night #vignette {
+    background: radial-gradient(120% 90% at 50% 42%, transparent 38%, rgba(4,7,20,0.60) 100%);
+  }
+
+  /* ══════════════ overlay chapters ══════════════ */
+  #ui { position: fixed; inset: 0; z-index: 10; pointer-events: none; overflow: hidden; }
+
+  .chapter {
+    position: absolute; left: 44px; bottom: 52px;
+    width: min(410px, calc(100vw - 120px));
+    display: flex; flex-direction: column; gap: 10px; align-items: flex-start;
+  }
+  .chapter > * {
+    opacity: 0; transform: translateY(20px); visibility: hidden;
+    transition: opacity .45s ease, transform .45s ease, visibility 0s linear .5s;
+  }
+  .chapter > *:nth-child(2) { transition-delay: .08s, .08s, .5s; }
+  .chapter > *:nth-child(3) { transition-delay: .16s, .16s, .5s; }
+  .chapter > *:nth-child(4) { transition-delay: .24s, .24s, .5s; }
+  .chapter.show > * { opacity: 1; transform: none; visibility: visible; transition-delay: 0s; }
+  .chapter.show > *:nth-child(2) { transition-delay: .08s; }
+  .chapter.show > *:nth-child(3) { transition-delay: .16s; }
+  .chapter.show > *:nth-child(4) { transition-delay: .24s; }
+
+  .card {
+    background: rgba(255,251,244,.94); border-radius: 16px; padding: 18px 20px;
+    color: var(--ink); width: 100%;
+    box-shadow: 0 6px 24px rgba(30,20,15,.18);
+    border: 1.5px solid rgba(58,46,40,.08);
+    backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  }
+  .chapter.show .card { pointer-events: auto; }
+  .card h2 { margin: 0 0 6px; font-size: 19px; font-weight: 800; letter-spacing: -0.01em; }
+  .card p { margin: 0; font-size: 14.5px; line-height: 1.55; font-weight: 600; color: #4B3B33; }
+  .card p + p { margin-top: 9px; }
+  .card .role {
+    margin: 0 0 8px; font-size: 12px; font-weight: 800;
+    letter-spacing: .05em; text-transform: uppercase; color: var(--coral);
+  }
+  /* the swap animation when a card's contents change mid-chapter */
+  .card.swap { opacity: 0 !important; transform: translateY(10px) !important;
+    transition: opacity .16s ease, transform .16s ease !important; }
+
+  .kicker {
+    background: rgba(43,34,28,.78); color: #FFF3E2;
+    font-size: 13.5px; font-weight: 600; font-style: italic;
+    padding: 8px 15px; border-radius: 999px; line-height: 1.4;
+    box-shadow: 0 3px 12px rgba(30,20,15,.22);
+  }
+
+  .rack { display: flex; align-items: baseline; gap: 10px; margin-top: 11px; }
+  .rack:first-of-type { margin-top: 4px; }
+  .rack .chip {
+    flex: none; font-size: 11px; font-weight: 800; letter-spacing: .08em;
+    background: var(--coral); color: var(--cream); border-radius: 6px; padding: 3px 8px;
+  }
+  .rack span:last-child { font-size: 13.5px; line-height: 1.5; font-weight: 700; color: #4B3B33; }
+
+  .pips { display: flex; gap: 5px; margin-top: 13px; }
+  .pips i { width: 6px; height: 6px; border-radius: 50%; background: rgba(58,46,40,.18); transition: background .3s ease; }
+  .pips i.on { background: var(--coral); }
+
+  .stat { display: flex; gap: 18px; margin-top: 12px; flex-wrap: wrap; }
+  .stat div { display: flex; flex-direction: column; }
+  .stat b { font-family: 'Fredoka', sans-serif; font-size: 21px; font-weight: 600; color: var(--coral); line-height: 1; }
+  .stat i { font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--ink-soft); margin-top: 4px; }
+
+  .visit {
+    display: inline-block; margin-top: 11px; font-weight: 800; font-size: 14px;
+    color: var(--coral-hot); text-decoration: none;
+  }
+  .visit:hover { text-decoration: underline; }
+
+  /* ── hero ── */
+  #ch-hero { left: 6vw; top: 15vh; bottom: auto; width: min(640px, 88vw); gap: 14px; }
+  #ch-hero h1 {
+    font-family: 'Fredoka', sans-serif; font-weight: 600; margin: 0;
+    font-size: clamp(50px, 8.2vw, 112px); line-height: .95; letter-spacing: .01em;
+    color: var(--cream);
+    text-shadow: 0 4px 28px rgba(58,30,10,.38), 0 1px 3px rgba(58,30,10,.25);
+  }
+  #ch-hero .tag {
+    margin: 0; font-size: 19px; font-weight: 700; color: var(--cream);
+    max-width: 470px; line-height: 1.45; text-shadow: 0 1px 10px rgba(58,30,10,.45);
+  }
+  #ch-hero .sub {
+    margin: 0; font-size: 14.5px; font-weight: 700; color: #FFF3E2;
+    text-shadow: 0 1px 8px rgba(58,30,10,.5);
+  }
+
+  /* ── about sits high-left over open water ── */
+  #ch-about { left: 44px; top: 62px; bottom: auto; }
+
+  /* ── contact finale, centred under the constellations ── */
+  #ch-contact {
+    left: 50%; bottom: 58px; transform: translateX(-50%);
+    width: min(660px, 92vw); align-items: center; text-align: center; gap: 12px;
+  }
+  #ch-contact h2 {
+    font-family: 'Fredoka', sans-serif; font-weight: 500; font-size: clamp(26px, 4.6vw, 36px);
+    margin: 0; color: #FFF4D6; text-shadow: 0 2px 22px rgba(9,14,32,.85);
+  }
+  #ch-contact .links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; pointer-events: auto; }
+  #ch-contact .links a {
+    color: #FFF7EA; text-decoration: none; font-size: 14px; font-weight: 800;
+    border: 1.5px solid rgba(255,232,201,.42); border-radius: 999px; padding: 9px 19px;
+    background: rgba(255,232,201,.07);
+    transition: background .2s ease, border-color .2s ease, transform .18s ease;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  }
+  #ch-contact .links a:hover {
+    background: var(--coral-hot); border-color: var(--coral-hot); transform: translateY(-2px);
+  }
+  #ch-contact .foot {
+    margin: 4px 0 0; font-size: 12.5px; font-weight: 600;
+    color: rgba(255,244,214,.55); text-shadow: 0 1px 8px rgba(9,14,32,.8);
+  }
+  #ch-contact.show > * { transition-delay: 1.5s; }
+  #ch-contact.show > *:nth-child(2) { transition-delay: 1.9s; }
+  #ch-contact.show > *:nth-child(3) { transition-delay: 2.3s; }
+
+  /* ══════════════ chrome ══════════════ */
+  #dots {
+    position: fixed; right: 22px; top: 50%; transform: translateY(-50%);
+    z-index: 20; display: flex; flex-direction: column; gap: 13px; align-items: center;
+  }
+  #dots button {
+    width: 9px; height: 9px; padding: 0; border-radius: 50%; cursor: pointer;
+    border: 1.5px solid rgba(255,251,244,.65); background: transparent;
+    transition: background .25s ease, transform .25s ease, border-color .25s ease;
+    position: relative;
+  }
+  #dots button.on { background: var(--cream); transform: scale(1.42); }
+  #dots button::after {
+    content: attr(data-label); position: absolute; right: 20px; top: 50%;
+    transform: translateY(-50%) translateX(4px);
+    font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--cream); white-space: nowrap; opacity: 0; pointer-events: none;
+    text-shadow: 0 1px 8px rgba(30,18,8,.7); transition: opacity .2s ease, transform .2s ease;
+  }
+  #dots button:hover::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+
+  #hint {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 20;
+    color: var(--cream); font-size: 13.5px; font-weight: 700; font-style: italic;
+    text-shadow: 0 1px 10px rgba(30,18,8,.6); pointer-events: none;
+    transition: opacity .6s ease; display: flex; align-items: center; gap: 9px;
+  }
+  #hint.gone { opacity: 0; }
+  #hint svg { animation: bob 1.9s ease-in-out infinite; }
+  @keyframes bob { 0%,100% { transform: translateY(-2px); } 50% { transform: translateY(3px); } }
+
+  #resumeBtn {
+    position: fixed; right: 18px; top: 18px; z-index: 21;
+    color: var(--cream); text-decoration: none;
+    font-size: 12.5px; font-weight: 800; letter-spacing: .04em;
+    border: 1.5px solid rgba(255,251,244,.45); border-radius: 999px; padding: 9px 17px;
+    background: rgba(43,34,28,.30);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    text-shadow: 0 1px 6px rgba(20,15,10,.4);
+    transition: background .2s ease, border-color .2s ease, transform .18s ease;
+  }
+  #resumeBtn:hover { background: var(--coral-hot); border-color: var(--coral-hot); transform: translateY(-1px); }
+
+  /* ══════════════ loader ══════════════ */
+  #loader {
+    position: fixed; inset: 0; z-index: 60; background: var(--sand);
+    display: grid; place-content: center; justify-items: center; gap: 16px;
+    transition: opacity .7s ease;
+  }
+  #loader.reveal { opacity: 0; pointer-events: none; }
+  #loader .mark {
+    font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: clamp(34px, 7vw, 62px);
+    color: rgba(196,89,63,.22); letter-spacing: .02em; line-height: 1;
+  }
+  #loader .lmsg {
+    color: var(--ink); font-size: 13px; font-weight: 800;
+    letter-spacing: .14em; text-transform: uppercase; text-align: center; padding: 0 24px;
+  }
+  #loader .lmsg i { font-style: normal; animation: ldot 1.4s ease-in-out infinite; }
+  #loader .lmsg i:nth-child(2) { animation-delay: .18s; }
+  #loader .lmsg i:nth-child(3) { animation-delay: .36s; }
+  @keyframes ldot { 0%,100% { opacity: .15; } 45% { opacity: 1; } }
+
+  /* ══════════════ no-WebGL / reduced-motion fallback ══════════════ */
+  #fallback { display: none; }
+  body.flat #loader, body.flat #scene, body.flat #vignette,
+  body.flat #ui, body.flat #dots, body.flat #hint, body.flat #scroll,
+  body.flat #resumeBtn { display: none !important; }
+  body.flat { background: var(--cream-2); }
+  body.flat #fallback { display: block; }
+
+  #fallback { max-width: 720px; margin: 0 auto; padding: 60px 24px 110px; }
+  #fallback .name {
+    font-family: 'Fredoka', sans-serif; font-weight: 600;
+    font-size: clamp(38px, 8vw, 62px); line-height: 1; margin: 0 0 10px; color: var(--ink);
+  }
+  #fallback .meta { margin: 0 0 6px; font-size: 14px; font-weight: 800; color: var(--coral); }
+  #fallback .lede { margin: 0 0 8px; font-size: 16px; font-weight: 600; line-height: 1.6; color: #4B3B33; }
+  #fallback .note {
+    background: rgba(232,89,58,.08); border-radius: 12px; padding: 14px 18px;
+    font-size: 14.5px; font-style: italic; font-weight: 600; color: #4B3B33; margin: 20px 0 34px;
+  }
+  #fallback h2 {
+    font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--coral); margin: 40px 0 16px;
+  }
+  #fallback h3 { font-size: 18px; font-weight: 800; margin: 24px 0 2px; }
+  #fallback .role { font-size: 13px; font-weight: 800; color: #9A7A5E; margin: 0 0 7px; }
+  #fallback p { font-size: 15px; font-weight: 600; line-height: 1.62; color: #4B3B33; margin: 0; }
+  #fallback ul { margin: 8px 0 0; padding-left: 20px; }
+  #fallback li { font-size: 15px; font-weight: 600; line-height: 1.62; color: #4B3B33; margin-bottom: 6px; }
+  #fallback a { color: var(--coral-hot); font-weight: 800; }
+  #fallback .row { margin: 0 0 7px; font-size: 15px; font-weight: 600; line-height: 1.6; color: #4B3B33; }
+  #fallback .row b { color: var(--ink); }
+  #fallback .contact { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
+
+  @media (max-width: 700px) {
+    .chapter { left: 14px; bottom: 18px; width: calc(100vw - 74px); }
+    #ch-about { left: 14px; top: 58px; bottom: auto; }
+    #ch-hero { left: 6vw; top: 10vh; }
+    #ch-hero .tag { font-size: 16.5px; }
+    #ch-contact { left: 50%; width: 92vw; bottom: 44px; }
+    .card { padding: 15px 16px; }
+    #dots { right: 12px; gap: 11px; }
+    #dots button::after { display: none; }
+    #resumeBtn { right: 12px; top: 12px; padding: 8px 14px; font-size: 11.5px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div id="vignette"></div>
+
+<!-- the scroll driver -->
+<div id="scroll"></div>
+
+<div id="ui">
+
+  <section id="ch-hero" class="chapter">
+    <h1>YOGABHISHEK</h1>
+    <p class="tag">Welcome to my stretch of the coast. I build things end to end — and I'll walk you through them.</p>
+    <p class="sub">Full Stack &amp; AI Engineer · CSE @ ADYPU × NIAT · BS Data Science @ IIT Madras · Pune, India</p>
+  </section>
+
+  <section id="ch-about" class="chapter">
+    <div class="card">
+      <p class="role">The stuff I carry with me</p>
+      <h2>Second year, already shipping</h2>
+      <p>Certified Full Stack JavaScript Developer. React and Next.js on the front, Python/Flask and Node on the back, and LLM pipelines — OpenAI APIs, RAG, agents — wired through the middle.</p>
+      <div class="stat">
+        <div><b>5+</b><i>apps in production</i></div>
+        <div><b>4</b><i>hackathons</i></div>
+        <div><b>8.11</b><i>CGPA / 10</i></div>
+      </div>
+    </div>
+    <p class="kicker">Two degrees at once: B.Tech CSE at ADYPU × NIAT in Pune, BS Data Science at IIT Madras.</p>
+  </section>
+
+  <section id="ch-skills" class="chapter">
+    <div class="card">
+      <p class="role">The workshop</p>
+      <h2>What's on the bench</h2>
+      <div class="rack"><span class="chip">BUILD</span><span>Python · JavaScript · TypeScript · SQL · C++ · HTML · CSS</span></div>
+      <div class="rack"><span class="chip">SHIP</span><span>React · Next.js · Node · Express · Flask · React Native · Docker · Vercel · Render</span></div>
+      <div class="rack"><span class="chip">THINK</span><span>OpenAI APIs · RAG · AI agents · prompt engineering · vector DBs · PostgreSQL · Supabase</span></div>
+      <div class="rack"><span class="chip">GLUE</span><span>REST APIs · auth · CI/CD · n8n · Apify · web scraping · system design</span></div>
+    </div>
+  </section>
+
+  <section id="ch-work" class="chapter">
+    <div class="card" id="workCard"></div>
+    <p class="kicker" id="workKicker"></p>
+  </section>
+
+  <section id="ch-projects" class="chapter">
+    <div class="card" id="projCard"></div>
+  </section>
+
+  <section id="ch-contact" class="chapter">
+    <h2>The tide's out. Say hi.</h2>
+    <div class="links">
+      <a href="https://github.com/sabhishek13-py" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://linkedin.com/in/yogabhishek-sukuluri-153304374" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="mailto:syogabhishek@gmail.com">Email</a>
+      <a href="./Yogabhishek_Sukuluri_Resume.pdf" target="_blank" rel="noopener">Résumé (PDF)</a>
+    </div>
+    <p class="foot">Open to Software Engineering, AI Engineering, Full Stack and Founding Engineer internships.</p>
+  </section>
+
+</div>
+
+<nav id="dots"></nav>
+
+<div id="hint">
+  <svg width="13" height="18" viewBox="0 0 13 18" fill="none" aria-hidden="true">
+    <path d="M6.5 1v14M1.5 10.5 6.5 16l5-5.5" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  scroll and I'll show you around
+</div>
+
+<a id="resumeBtn" href="./Yogabhishek_Sukuluri_Resume.pdf" target="_blank" rel="noopener">RÉSUMÉ</a>
+
+<div id="loader">
+  <div class="mark">YOGABHISHEK</div>
+  <div class="lmsg">shaping the coastline<i>.</i><i>.</i><i>.</i></div>
+</div>
+
+<!-- ══════════════════ flat fallback: everything, no WebGL needed ══════════════════ -->
+<main id="fallback">
+  <h1 class="name">Yogabhishek Sukuluri</h1>
+  <p class="meta">Certified Full Stack JavaScript Developer · Pune, Maharashtra, India</p>
+  <p class="lede">Welcome to my stretch of the coast. I build things end to end.</p>
+  <p class="note">The 3D version needs WebGL — everything's here too.</p>
+
+  <h2>About</h2>
+  <p>Second-year B.Tech student and Certified Full Stack JavaScript Developer who ships end-to-end products: React and Next.js frontends, Python/Flask and Node.js backends, and LLM pipelines built on OpenAI APIs, RAG, and AI agents. Frontend engineering intern at an AI startup, Zulip open-source contributor, and builder of automation systems with n8n and Apify. Seeking Software Engineering, AI Engineering, Full Stack, or Founding Engineer internships.</p>
+
+  <h2>Education</h2>
+  <h3>Ajeenkya D Y Patil University × NIAT</h3>
+  <p class="role">B.Tech, Computer Science and Engineering (Second Year) · Pune, India</p>
+  <p>CGPA 8.11/10. Coursework: Data Structures, DBMS, Web Application Development, Computational Thinking.</p>
+  <h3>Indian Institute of Technology Madras</h3>
+  <p class="role">BS in Data Science and Applications (Online)</p>
+
+  <h2>Work</h2>
+  <h3>FlyRank AI</h3>
+  <p class="role">Frontend Engineering Intern · May 2026 – Aug 2026</p>
+  <ul>
+    <li>Built a reusable React and TypeScript component library of 25+ UI primitives adopted across 6 product modules, cutting new-feature build time by an estimated 30%; shipped features with 4 engineers via Agile sprints, code review, and CI/CD.</li>
+    <li>Integrated 15+ REST API endpoints with typed clients, retry logic, and centralized error handling, reducing API-related bug reports by an estimated 40%.</li>
+    <li>Optimized asynchronous data fetching using request caching, debouncing, and parallel loading, reducing average page load time from ~3.2s to ~1.8s (44% faster).</li>
+    <li>Restructured the frontend into a feature-based architecture with code splitting and lazy loading, shrinking initial bundle size by ~25% and raising the Lighthouse performance score from 68 to 92.</li>
+  </ul>
+
+  <h3>Zulip</h3>
+  <p class="role">Open Source Contributor · Python, Django, Docker · 2025 – Present</p>
+  <ul>
+    <li>Ran the Zulip server locally in Docker to reproduce issues and validate backend changes before submitting pull requests, shortening the maintainer review cycle.</li>
+    <li>Contributed Django backend changes improving webhook permission handling and updated API documentation for integration endpoints; submitted a Google Summer of Code proposal.</li>
+  </ul>
+
+  <h2>Projects</h2>
+  <h3>AI Product Intelligence Platform</h3>
+  <p class="role">Python · OpenAI · Vector Database · Flask · React</p>
+  <ul>
+    <li>Engineered an LLM pipeline that converts unstructured product data from websites, PDFs, and catalogs into structured, commerce-ready JSON, cutting manual cataloging effort ~80% and automating scraping-to-validation handoffs with n8n and Apify.</li>
+    <li>Built document parsing and image understanding modules that process 500+ product pages per run at ~95% field-extraction accuracy using schema-constrained prompt engineering.</li>
+    <li>Implemented Retrieval-Augmented Generation over a vector database indexing 10,000+ chunks, returning product enrichment context in under 1 second per query.</li>
+  </ul>
+
+  <h3>Workday Hub — Knowledge Management Platform</h3>
+  <p class="role">React · Supabase · PostgreSQL · JavaScript</p>
+  <ul>
+    <li>Developed a full-stack platform with Supabase authentication and role-based access control, supporting full CRUD across notes, resources, and dashboard modules behind a responsive React frontend.</li>
+    <li>Designed a normalized PostgreSQL schema with row-level security policies, isolating user data across all tables and preventing cross-account reads by default.</li>
+  </ul>
+
+  <h2>Toolbox</h2>
+  <p class="row"><b>Languages</b> — Python · JavaScript · TypeScript · SQL · C++ · HTML · CSS</p>
+  <p class="row"><b>Frameworks</b> — React · Next.js · Node.js · Express · Flask · React Native</p>
+  <p class="row"><b>AI &amp; data</b> — OpenAI APIs · LLM applications · prompt engineering · AI agents · RAG · PostgreSQL · Supabase · vector databases</p>
+  <p class="row"><b>Tools &amp; automation</b> — Git · GitHub · Docker · CI/CD · Vercel · Render · Linux · macOS · n8n · Apify · web scraping</p>
+  <p class="row"><b>Concepts</b> — REST APIs · API integration · authentication · system design · responsive design · Agile</p>
+
+  <h2>Certifications &amp; achievements</h2>
+  <ul>
+    <li>Certified Full Stack JavaScript Developer — IBM, 2026.</li>
+    <li>Participated in 4 hackathons, delivering working full-stack prototypes within 24–48 hour build windows; designed and deployed 5+ production-grade AI, automation, and full-stack applications independently.</li>
+  </ul>
+
+  <h2>Say hi</h2>
+  <div class="contact">
+    <a href="https://github.com/sabhishek13-py" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://linkedin.com/in/yogabhishek-sukuluri-153304374" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="mailto:syogabhishek@gmail.com">Email</a>
+    <a href="./Yogabhishek_Sukuluri_Resume.pdf" target="_blank" rel="noopener">Résumé (PDF)</a>
+  </div>
+</main>
+
+<!-- carried over from the previous site so the existing stats keep running -->
+<script defer src="/_vercel/insights/script.js"></script>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.169.0/build/three.module.js" } }
+</script>
+<script type="module" src="./scene.js"></script>
+
+</body>
+</html>
